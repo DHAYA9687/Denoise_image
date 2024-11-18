@@ -54,10 +54,7 @@ app.post("/denoise", upload.single("image"), async (req, res) => {
         console.error("Failed to delete original file:", err);
       }
     });
-
-    // Delete the original uploaded file
-
-  
+    
     // Respond with the path of the processed file
     return res.json({
       message: "Image processed successfully",
@@ -68,7 +65,7 @@ app.post("/denoise", upload.single("image"), async (req, res) => {
     return res.status(500).json({ error: "Failed to process image." });
   }
 });
-
+//port is running on 3000
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
