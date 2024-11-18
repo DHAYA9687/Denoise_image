@@ -1,43 +1,3 @@
-// import cors from "cors";
-// import dotenv from "dotenv";
-// import express from "express";
-// import multer from "multer";
-// import path from "path";
-// import { fileURLToPath } from "url";
-// dotenv.config();
-// const app = express();
-// const __filename = fileURLToPath(import.meta.url);
-//  const __dirname = path.dirname(__filename);
-//  app.use(cors());
-//  app.use(express.json());
-//  app.use(express.urlencoded({ extended: true }));
-//  app.use(express.static(path.join(__dirname, "public")));
-// const port = 3000;
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, path.join(__dirname, "./public/images"));
-//   },
-//   filename: function (req, file, cb) {
-//     cb(
-//       null,
-//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-//     );
-//   },
-// });
-// const upload = multer({ storage: storage });
-
-// app.post("/denoise", upload.single("image"), (req, res) => {
-//    const image = req.file?.filename;
-//    if(!image){  
-//     return res.status(400).json({ error: 'No file uploaded.' });
-//   }
-//   console.log(image);
-//   return res.json({ image: 'Image uploaded sucessfuly' });
-
-// });
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
@@ -87,14 +47,17 @@ app.post("/denoise", upload.single("image"), async (req, res) => {
     const outputFilename = `denoised_${req.file.originalname}`;
     const outputPath = path.join(__dirname, "public/images", outputFilename);
 
-    // Apply Gaussian blur using sharp
-    await sharp(inputPath)
-      .blur(5) // Adjust blur intensity here
-      .toFile(outputPath);
+    await sharp(inputPath).median(3).toFile(outputPath);
+
+    fs.unlink(inputPath, (err) => {
+      if (err) {
+        console.error("Failed to delete original file:", err);
+      }
+    });
 
     // Delete the original uploaded file
-    fs.unlinkSync(inputPath);
 
+  
     // Respond with the path of the processed file
     return res.json({
       message: "Image processed successfully",

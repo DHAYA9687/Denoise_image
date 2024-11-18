@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -12,7 +14,7 @@ const App = () => {
 
   const handleDenoise = async () => {
     if (!selectedImage) {
-      alert('Please upload an image first.');
+      toast.error('Please upload an image first.');
       return;
     }
 
@@ -25,11 +27,11 @@ const App = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      alert(response.data.message);
+      toast.success(response.data.message);
       setDenoisedImage(`http://localhost:3000/${response.data.outputFile}`);
     } catch (error) {
       console.error('Error denoising image:', error);
-      alert('Failed to process the image.');
+      toast.error('Failed to process the image.');
     }
   };
 
@@ -39,6 +41,18 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+      <ToastContainer 
+  position="top-right"
+  autoClose={5000}
+  hideProgressBar={false}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+/>
+
       <h1 className="text-4xl font-extrabold text-blue-600 mb-8">Image Denoising</h1>
       <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-md w-full max-w-xl">
         <input
@@ -77,6 +91,7 @@ const App = () => {
           </div>
         )}
       </div>
+      
     </div>
   );
 };
