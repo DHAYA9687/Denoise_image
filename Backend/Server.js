@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import multer from "multer";
-import sharp from "sharp"; // Ensure sharp is installed
+import multer from "multer"; // Ensure sharp is installed
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { spawn } from "child_process";
 
 dotenv.config();
 
@@ -47,25 +47,39 @@ app.post("/denoise", upload.single("image"), async (req, res) => {
     const outputFilename = `denoised_${req.file.originalname}`;
     const outputPath = path.join(__dirname, "public/images", outputFilename);
 
-    await sharp(inputPath).median(3).toFile(outputPath);
+    // Spawn Python process for denoising
+    const pythonProcess = spawn("python", ["denoise.py", inputPath, outputPath]);
 
-    fs.unlink(inputPath, (err) => {
-      if (err) {
-        console.error("Failed to delete original file:", err);
-      }
+    pythonProcess.stderr.on("data", (data) => {
+      console.error(`Python Error: ${data}`);
     });
-    
-    // Respond with the path of the processed file
-    return res.json({
-      message: "Image processed successfully",
-      outputFile: `/images/${outputFilename}`,
+
+    pythonProcess.on("close", (code) => {
+      if (code === 0) {
+        // Delete the original file after processing
+        fs.unlink(inputPath, (err) => {
+          if (err) {
+            console.error("Failed to delete original file:", err);
+          }
+        });
+
+        // Respond with the path of the processed file
+        return res.json({
+          message: "Image processed successfully",
+          outputFile: `/images/${outputFilename}`,
+        });
+      } else {
+        console.error(`Python script exited with code ${code}`);
+        return res.status(500).json({ error: "Failed to process image." });
+      }
     });
   } catch (error) {
     console.error("Error processing image:", error);
     return res.status(500).json({ error: "Failed to process image." });
   }
 });
-//port is running on 3000
+
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

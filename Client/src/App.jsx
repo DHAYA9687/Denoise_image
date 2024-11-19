@@ -28,6 +28,7 @@ const App = () => {
         },
       });
       toast.success(response.data.message);
+      
       setDenoisedImage(`http://localhost:3000/${response.data.outputFile}`);
     } catch (error) {
       console.error('Error denoising image:', error);
